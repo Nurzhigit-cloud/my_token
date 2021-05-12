@@ -41,6 +41,7 @@ urlpatterns = [
     path('', api_root),
     path('api/v1/categories/', CategoriesListView.as_view(), name='categories-list'),
     path('api/v1/review/', ReviewCreateView.as_view(), name='create-review'),
+    # path('api/v1/cart/', CartProductView.as_view(), name='create-cart')
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -44,6 +44,12 @@ class Review(models.Model):
         ]
 
 class Basket(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='basket')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='basket')
+    is_basket = models.BooleanField(default=False)
+
+
+class Like(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
     is_liked = models.BooleanField(default=False)

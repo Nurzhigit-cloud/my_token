@@ -1,17 +1,18 @@
 from django.shortcuts import render
 from django.views.generic import CreateView
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from rest_framework import filters, viewsets
 from rest_framework.decorators import api_view, action
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.viewsets import ModelViewSet
 
-from products.models import Category, Product, Review, Basket
+from products.models import Category, Product, Review, Basket, Like
 from products.permissions import IsAdminPermission, IsAuthorPermission
-from products.serializers import CategorySerializer, ProductSerializer, ReviewSerializer, ProductListSerializer
+from products.serializers import CategorySerializer, ProductSerializer, ReviewSerializer, ProductListSerializer, \
+    BasketSerializers
 
 
 class CategoriesListView(ListAPIView):
@@ -36,16 +37,50 @@ class ProductViewSet(ModelViewSet):
             return ProductListSerializer
         return self.serializer_class
 
-    @action(['GET'], detail=True)
-    def review(self, request, slug=None):
-        product = self.get_object()
-        reviews = product.review.all()
-        serializers = ReviewSerializer(reviews, many=True)
-        return Response(serializers.data)
 
-
+    @action(['GET', 'POST'], detail=True)
+    def review(self, request, slug):
+        product = get_object_or_404(Product, slug=slug)
+        if request.method == 'GET':
+            reviews = product.review.all()
+            serializers = ReviewSerializer(reviews, many=True)
+            return Response(serializers.data)
+        elif request.method == 'POST':
+            serializer = ReviewSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=404)
     @action(['POST'], detail=True)
     def like(self, request, slug=None):
+        product = self.get_object()
+        user = request.user
+        try:
+            like = Like.objects.get(product=product, user=user)
+            like.is_liked = not like.is_liked
+            like.save()
+            message = 'liked' if like.is_liked else 'dislike'
+        except Like.DoesNotExist:
+            Like.objects.create(product=product, user=user, is_liked=True)
+        return Response(message, status=200)
+
+    # @action(['GET', 'POST'], detail=True)
+    # def basket(self, request, slug=None):
+    #     product = get_object_or_404(Product, slug=slug)
+    #     if request.method == 'GET':
+    #         product = product.product.all()
+    #         serializers = BasketSerializers(product, many=True)
+    #         return Response(serializers.data)
+    #     elif request.method == 'POST':
+    #         serializer = BasketSerializers(data=request.data, context={'request': request})
+    #         if serializer.is_valid():
+    #             serializer.save()
+    #             return Response(serializer.data, status=201)
+    #     return Response(serializer.errors, status=404)
+
+    @action(['POST'], detail=True)
+    def basket(self, request, slug=None):
+
         post = self.get_object()
         user = request.user
         try:
@@ -68,6 +103,7 @@ class ProductViewSet(ModelViewSet):
 
     def get_serializer_context(self):
         return {'request': self.request, 'action': self.action}
+
 
 
 @api_view(['GET'])

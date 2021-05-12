@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from products.models import Category, Product, Review
+from products.models import Category, Product, Review, Basket
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -55,3 +55,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         user = requests.user
         review = Review.objects.create(user=user, **validated_data)
         return review
+
+class BasketSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Basket
+        fields = '__all__'
