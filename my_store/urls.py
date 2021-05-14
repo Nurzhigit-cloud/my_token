@@ -21,10 +21,12 @@ from drf_yasg import openapi
 from rest_framework.routers import DefaultRouter
 from rest_framework.schemas import get_schema_view
 
+from cart.views import CartViewSet
 from products.views import CategoriesListView, ProductViewSet, ReviewCreateView, api_root
 
 router = DefaultRouter()
 router.register('products', ProductViewSet)
+router.register('cart', CartViewSet)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -41,7 +43,6 @@ urlpatterns = [
     path('', api_root),
     path('api/v1/categories/', CategoriesListView.as_view(), name='categories-list'),
     path('api/v1/review/', ReviewCreateView.as_view(), name='create-review'),
-    # path('api/v1/cart/', CartProductView.as_view(), name='create-cart')
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

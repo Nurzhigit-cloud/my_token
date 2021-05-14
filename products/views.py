@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.views.generic import CreateView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
@@ -11,8 +10,8 @@ from rest_framework.viewsets import ModelViewSet
 
 from products.models import Category, Product, Review, Basket, Like
 from products.permissions import IsAdminPermission, IsAuthorPermission
-from products.serializers import CategorySerializer, ProductSerializer, ReviewSerializer, ProductListSerializer, \
-    BasketSerializers
+from products.serializers import CategorySerializer, ProductSerializer, ReviewSerializer, ProductListSerializer
+
 
 
 class CategoriesListView(ListAPIView):
@@ -64,33 +63,7 @@ class ProductViewSet(ModelViewSet):
             Like.objects.create(product=product, user=user, is_liked=True)
         return Response(message, status=200)
 
-    # @action(['GET', 'POST'], detail=True)
-    # def basket(self, request, slug=None):
-    #     product = get_object_or_404(Product, slug=slug)
-    #     if request.method == 'GET':
-    #         product = product.product.all()
-    #         serializers = BasketSerializers(product, many=True)
-    #         return Response(serializers.data)
-    #     elif request.method == 'POST':
-    #         serializer = BasketSerializers(data=request.data, context={'request': request})
-    #         if serializer.is_valid():
-    #             serializer.save()
-    #             return Response(serializer.data, status=201)
-    #     return Response(serializer.errors, status=404)
 
-    @action(['POST'], detail=True)
-    def basket(self, request, slug=None):
-
-        post = self.get_object()
-        user = request.user
-        try:
-            basket = Basket.objects.get(post=post, user=user)
-            basket.is_liked = not basket.is_liked
-            basket.save()
-            message = 'liked' if basket.is_liked else 'dislike'
-        except Basket.DoesNotExist:
-            Basket.objects.create(post=post, user=user, is_liked=True)
-        return Response(message, status=200)
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -111,6 +84,8 @@ def api_root(request, format=None):
     return Response({
         'products': reverse('product-list', request=request, format=format),
         'categories': reverse('categories-list', request=request, format=format),
+        'carts': reverse('cart-list', request=request, format=format),
+
     })
 
 
